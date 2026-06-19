@@ -1,13 +1,7 @@
-import React from "react";
+import type { RouteObject } from "react-router";
 import App from "./App";
 
-type Route = {
-  path?: string,
-  element: React.ReactNode,
-  index?: boolean,
-};
-
-export const routes: Route[] = [
+export const routes: RouteObject[] = [
   {
     path: '/',
     element: <App />,
