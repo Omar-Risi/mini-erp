@@ -10,6 +10,15 @@ export function initDatabase() {
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
   migrate();
+  rollover();
+}
+
+function applyMigration(name, sql) {
+  const already = db.prepare("SELECT 1 FROM _migrations WHERE name = ?").get(name);
+  if (!already) {
+    db.exec(sql);
+    db.prepare("INSERT INTO _migrations (name) VALUES (?)").run(name);
+  }
 }
 
 function migrate() {
@@ -20,7 +29,28 @@ function migrate() {
       run_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
-  // Add migration entries here as the schema grows
+
+  applyMigration("001_create_tasks", `
+    CREATE TABLE tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      due_date TEXT NOT NULL,
+      assigned_date TEXT NOT NULL,
+      is_overdue INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      completed_at TEXT
+    );
+  `);
+}
+
+// Runs on every app start: bumps stale active tasks to today and marks them overdue.
+function rollover() {
+  db.prepare(`
+    UPDATE tasks
+    SET assigned_date = date('now'), is_overdue = 1
+    WHERE assigned_date < date('now') AND status = 'active'
+  `).run();
 }
 
 export function dbGet(sql, params = []) {
@@ -32,5 +62,6 @@ export function dbAll(sql, params = []) {
 }
 
 export function dbRun(sql, params = []) {
-  return db.prepare(sql).run(...params);
+  const result = db.prepare(sql).run(...params);
+  return { changes: result.changes, lastInsertRowid: Number(result.lastInsertRowid) };
 }
