@@ -1,23 +1,10 @@
 import { useState, useRef } from "react";
 import { useLoaderData, useFetcher, Form } from "react-router";
 import { db } from "@/lib/db";
+import type { Task } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Check, Trash2, Plus, Clock, Search } from "lucide-react";
-
-// ── Types ────────────────────────────────────────────────────────────────────
-
-export type Task = {
-  id: number;
-  title: string;
-  due_date: string;
-  assigned_date: string;
-  is_overdue: number;
-  days_overdue: number;
-  status: string;
-  created_at: string;
-  completed_at: string | null;
-};
 
 // ── Loader ───────────────────────────────────────────────────────────────────
 

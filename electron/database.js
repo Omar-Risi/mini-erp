@@ -42,6 +42,18 @@ function migrate() {
       completed_at TEXT
     );
   `);
+
+  applyMigration("002_create_notes", `
+    CREATE TABLE notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL DEFAULT '',
+      is_daily INTEGER NOT NULL DEFAULT 0,
+      daily_date TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
 }
 
 // Runs on every app start: bumps stale active tasks to today and marks them overdue.
