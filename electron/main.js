@@ -1,9 +1,16 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { fileURLToPath } from "url";
 import path from "path";
+import { initDatabase, dbGet, dbAll, dbRun } from "./database.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isDev = process.env.NODE_ENV === "development";
+
+function registerIpcHandlers() {
+  ipcMain.handle("db:get", (_, sql, params) => dbGet(sql, params));
+  ipcMain.handle("db:all", (_, sql, params) => dbAll(sql, params));
+  ipcMain.handle("db:run", (_, sql, params) => dbRun(sql, params));
+}
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -24,7 +31,11 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  initDatabase();
+  registerIpcHandlers();
+  createWindow();
+});
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
